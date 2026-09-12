@@ -11,7 +11,6 @@ import { FastifyInstance } from "fastify";
 import z from "zod";
 import { randomUUID } from "node:crypto";
 import { knexDb } from "../database";
-import { id } from "zod/v4/locales";
 
 export async function foodRoutes(app: FastifyInstance) {
   //GET
