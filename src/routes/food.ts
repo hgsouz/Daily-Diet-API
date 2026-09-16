@@ -93,17 +93,15 @@ export async function foodRoutes(app: FastifyInstance) {
   });
 
   // DELETE
-  app.delete("/:id", async (request) => {
+  app.delete("/:id", async (request, reply) => {
     const getUniqueFoodSchema = z.object({
       id: z.uuid(),
     });
 
     const { id } = getUniqueFoodSchema.parse(request.params);
 
-    const deleteUniqueFood = await knexDb("food_description")
-      .delete()
-      .where({ id });
+    await knexDb("food_description").delete().where({ id });
 
-    return { deleteUniqueFood };
+    return reply.status(204).send("Refeição deletada com sucesso!");
   });
 }
