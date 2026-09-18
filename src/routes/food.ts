@@ -11,6 +11,7 @@ import { FastifyInstance } from "fastify";
 import z from "zod";
 import { randomUUID } from "node:crypto";
 import { knexDb } from "../database";
+import { AppError } from "../errors/app-error";
 
 export async function foodRoutes(app: FastifyInstance) {
   //GET
@@ -24,12 +25,15 @@ export async function foodRoutes(app: FastifyInstance) {
     const getUniqueFoodSchema = z.object({
       id: z.uuid(),
     });
-
     const { id } = getUniqueFoodSchema.parse(request.params);
 
     const listUniqueFood = await knexDb("food_description")
-      .select()
-      .where({ id });
+      .where({ id })
+      .first();
+
+    if (!listUniqueFood) {
+      throw new AppError("Refeição não encontrada", 404);
+    }
 
     return { listUniqueFood };
   });
@@ -53,7 +57,7 @@ export async function foodRoutes(app: FastifyInstance) {
       request.body,
     );
 
-    await knexDb("food_description")
+    const updatedRows = await knexDb("food_description")
       .update({
         name,
         description,
@@ -62,6 +66,10 @@ export async function foodRoutes(app: FastifyInstance) {
         inOutDiet,
       })
       .where({ id });
+
+    if (updatedRows === 0) {
+      throw new AppError("Refeição não encontrada", 404);
+    }
 
     return reply.status(200).send("Refeição atualizada com sucesso!");
   });
@@ -100,7 +108,11 @@ export async function foodRoutes(app: FastifyInstance) {
 
     const { id } = getUniqueFoodSchema.parse(request.params);
 
-    await knexDb("food_description").delete().where({ id });
+    const deletedRows = await knexDb("food_description").delete().where({ id });
+
+    if (deletedRows === 0) {
+      throw new AppError("Refeição não encontrada", 404);
+    }
 
     return reply.status(204).send("Refeição deletada com sucesso!");
   });
