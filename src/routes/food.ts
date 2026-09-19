@@ -12,23 +12,30 @@ import z from "zod";
 import { randomUUID } from "node:crypto";
 import { knexDb } from "../database";
 import { AppError } from "../errors/app-error";
+import { checkAuth } from "../middlewares/check_auth";
 
 export async function foodRoutes(app: FastifyInstance) {
   //GET
-  app.get("/", async () => {
-    const listFood = await knexDb("food_description").select();
+  app.get("/", { preHandler: [checkAuth] }, async (request) => {
+    const userId = request.user.sub;
+
+    const listFood = await knexDb("food_description")
+      .where({ userId })
+      .select();
 
     return { listFood };
   });
 
-  app.get("/:id", async (request) => {
+  app.get("/:id", { preHandler: [checkAuth] }, async (request) => {
+    const userId = request.user.sub;
+
     const getUniqueFoodSchema = z.object({
       id: z.uuid(),
     });
     const { id } = getUniqueFoodSchema.parse(request.params);
 
     const listUniqueFood = await knexDb("food_description")
-      .where({ id })
+      .where({ id, userId })
       .first();
 
     if (!listUniqueFood) {
@@ -39,7 +46,9 @@ export async function foodRoutes(app: FastifyInstance) {
   });
 
   // PUT
-  app.put("/:id", async (request, reply) => {
+  app.put("/:id", { preHandler: [checkAuth] }, async (request, reply) => {
+    const userId = request.user.sub;
+
     const editFoodParamSchema = z.object({
       id: z.uuid(),
     });
@@ -65,7 +74,7 @@ export async function foodRoutes(app: FastifyInstance) {
         time,
         inOutDiet,
       })
-      .where({ id });
+      .where({ id, userId });
 
     if (updatedRows === 0) {
       throw new AppError("Refeição não encontrada", 404);
@@ -75,7 +84,9 @@ export async function foodRoutes(app: FastifyInstance) {
   });
 
   // POST
-  app.post("/create", async (request, reply) => {
+  app.post("/create", { preHandler: [checkAuth] }, async (request, reply) => {
+    const userId = request.user.sub;
+
     const createFoodSchema = z.object({
       name: z.string(),
       description: z.string(),
@@ -88,7 +99,7 @@ export async function foodRoutes(app: FastifyInstance) {
       request.body,
     );
 
-    await knexDb("food_description").insert({
+    await knexDb("food_description").where({ userId }).insert({
       id: randomUUID(),
       name,
       description,
@@ -101,14 +112,18 @@ export async function foodRoutes(app: FastifyInstance) {
   });
 
   // DELETE
-  app.delete("/:id", async (request, reply) => {
+  app.delete("/:id", { preHandler: [checkAuth] }, async (request, reply) => {
+    const userId = request.user.sub;
+
     const getUniqueFoodSchema = z.object({
       id: z.uuid(),
     });
 
     const { id } = getUniqueFoodSchema.parse(request.params);
 
-    const deletedRows = await knexDb("food_description").delete().where({ id });
+    const deletedRows = await knexDb("food_description")
+      .delete()
+      .where({ id, userId });
 
     if (deletedRows === 0) {
       throw new AppError("Refeição não encontrada", 404);

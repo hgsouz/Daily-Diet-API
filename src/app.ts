@@ -3,6 +3,10 @@ import { foodRoutes } from "./routes/food";
 
 import { ZodError, z } from "zod";
 import { AppError } from "./errors/app-error";
+import { auth } from "./routes/login";
+
+import fastifyJwt from "@fastify/jwt";
+import { env } from "./env";
 
 export const app = fastify();
 
@@ -26,6 +30,14 @@ app.setErrorHandler((error, request, reply) => {
   });
 });
 
+app.register(fastifyJwt, {
+  secret: env.JWT_SECRET,
+});
+
 app.register(foodRoutes, {
   prefix: "/food",
+});
+
+app.register(auth, {
+  prefix: "/auth",
 });
