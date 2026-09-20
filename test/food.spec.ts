@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 import { randomUUID } from "node:crypto";
 
 import { execSync } from "node:child_process";
@@ -6,22 +6,43 @@ import request from "supertest";
 import { app } from "../src/app.js";
 
 describe("food routes", () => {
-  beforeEach(() => {
-    app.ready();
+  let token: string;
+
+  beforeAll(async () => {
+    await app.ready();
   });
 
-  afterAll(() => {
-    app.close;
+  afterAll(async () => {
+    await app.close();
   });
 
-  beforeEach(() => {
-    execSync("npm run knex migrate:rollback --all");
-    execSync("npm run knex migrate:latest");
+  beforeEach(async () => {
+    execSync("npm run knex -- migrate:rollback --all");
+    execSync("npm run knex -- migrate:latest");
+
+    await request(app.server)
+      .post("/auth/create")
+
+      .send({
+        name: "Teste",
+        email: "teste@teste.com",
+        password: "testing",
+      });
+
+    const loginResponse = await request(app.server)
+      .post("/auth")
+
+      .send({
+        email: "teste@teste.com",
+        password: "testing",
+      });
+
+    token = loginResponse.body.token;
   });
 
   // Create
   it("should add a new food", async () => {
-    await request(app.server)
+    const { body } = await request(app.server)
       .post("/food/create")
       .send({
         name: "Example",
@@ -30,24 +51,27 @@ describe("food routes", () => {
         time: "10:10",
         inOutDiet: "inDiet",
       })
+      .set("Authorization", `Bearer ${token}`)
       .expect(201);
+
+    const id = body.id;
   });
 
   // Update
   it("should update an old created food", async () => {
-    const id = randomUUID();
-
-    request(app.server)
+    const { body } = await request(app.server)
       .post("/food/create")
       .send({
-        id: id,
         name: "Example",
         description: "Example",
         date: "2026-01-01",
         time: "10:10",
         inOutDiet: "inDiet",
       })
+      .set("Authorization", `Bearer ${token}`)
       .expect(201);
+
+    const id = body.id;
 
     await request(app.server)
       .put(`/food/${id}`)
@@ -58,48 +82,58 @@ describe("food routes", () => {
         time: "01:01",
         inOutDiet: "outDiet",
       })
+      .set("Authorization", `Bearer ${token}`)
       .expect(200);
   });
 
   // Listar
   it("should list all the foods created before", async () => {
-    await request(app.server).get("/food").expect(200);
+    await request(app.server)
+      .get("/food")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
   });
 
   it("should list an unique food created before by id", async () => {
-    const id = randomUUID();
-
-    request(app.server)
+    const { body } = await request(app.server)
       .post("/food/create")
       .send({
-        id: id,
         name: "Example",
         description: "Example",
         date: "2026-01-01",
         time: "10:10",
         inOutDiet: "inDiet",
       })
+      .set("Authorization", `Bearer ${token}`)
       .expect(201);
 
-    await request(app.server).get(`/food/${id}`).expect(200);
+    const id = body.id;
+
+    await request(app.server)
+      .get(`/food/${id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
   });
 
   // Deletar
   it("should delete an old created food", async () => {
-    const id = randomUUID();
-
-    request(app.server)
+    const { body } = await request(app.server)
       .post("/food/create")
       .send({
-        id: id,
         name: "Example",
         description: "Example",
         date: "2026-01-01",
         time: "10:10",
         inOutDiet: "inDiet",
       })
+      .set("Authorization", `Bearer ${token}`)
       .expect(201);
 
-    await request(app.server).delete(`/food/${id}`).expect(204);
+    const id = body.id;
+
+    await request(app.server)
+      .delete(`/food/${id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
   });
 });

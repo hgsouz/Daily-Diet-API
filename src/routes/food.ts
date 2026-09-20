@@ -86,6 +86,7 @@ export async function foodRoutes(app: FastifyInstance) {
   // POST
   app.post("/create", { preHandler: [checkAuth] }, async (request, reply) => {
     const userId = request.user.sub;
+    const id = randomUUID();
 
     const createFoodSchema = z.object({
       name: z.string(),
@@ -99,8 +100,9 @@ export async function foodRoutes(app: FastifyInstance) {
       request.body,
     );
 
-    await knexDb("food_description").where({ userId }).insert({
-      id: randomUUID(),
+    await knexDb("food_description").insert({
+      id,
+      userId,
       name,
       description,
       date,
@@ -108,7 +110,7 @@ export async function foodRoutes(app: FastifyInstance) {
       inOutDiet,
     });
 
-    return reply.status(201).send("Nova refeição adicionada com sucesso!");
+    return reply.status(201).send({ id });
   });
 
   // DELETE

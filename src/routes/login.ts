@@ -20,14 +20,14 @@ export async function auth(app: FastifyInstance) {
 
     const { name, email, password } = authSchema.parse(request.body);
 
-    const existing = await knexDb("user").where({ email }).first();
+    const existing = await knexDb("users").where({ email }).first();
     if (existing) {
       return reply.status(409).send({ message: "E-mail já cadastrado." });
     }
 
     const password_hash = await bcrypt.hash(password, 8);
 
-    await knexDb("user").insert({
+    await knexDb("users").insert({
       id: randomUUID(),
       name,
       email,
@@ -45,14 +45,16 @@ export async function auth(app: FastifyInstance) {
 
     const { email, password } = loginSchema.parse(request.body);
 
-    const user = await knexDb("user").where({ email }).first();
+    const user = await knexDb("users").where({ email }).first();
 
     const checkPassword = user
       ? await bcrypt.compare(password, user.password_hash)
       : false;
 
     if (!user || !checkPassword) {
-      reply.status(401).send({ message: "Usúario e/ou senha incorretos" });
+      return reply
+        .status(401)
+        .send({ message: "Usúario e/ou senha incorretos" });
     }
 
     const token = await reply.jwtSign(
