@@ -1,6 +1,5 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import "@fastify/jwt";
-import { error } from "console";
 
 export async function checkAuth(request: FastifyRequest, reply: FastifyReply) {
   try {

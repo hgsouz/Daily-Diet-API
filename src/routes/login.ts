@@ -3,10 +3,10 @@ Aqui devemos criar rotas de criação e validação e login da plataforma -
 Metodos: Post & Get
 */
 
-import { FastifyInstance } from "fastify";
-import { email, z } from "zod";
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import bcrypt from "bcrypt";
-import { knexDb } from "../database";
+import { knexDb } from "../database.js";
 import { randomUUID } from "node:crypto";
 
 export async function auth(app: FastifyInstance) {

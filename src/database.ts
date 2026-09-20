@@ -1,5 +1,5 @@
 import knex, { type Knex } from "knex";
-import { env } from "../src/env/index";
+import { env } from "../src/env/index.js";
 
 export const setupKnex = knex;
 

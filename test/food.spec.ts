@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 
 import { execSync } from "node:child_process";
 import request from "supertest";
-import { app } from "../src/app";
+import { app } from "../src/app.js";
 
 describe("food routes", () => {
   beforeEach(() => {

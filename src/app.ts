@@ -1,12 +1,12 @@
 import fastify from "fastify";
-import { foodRoutes } from "./routes/food";
+import { foodRoutes } from "./routes/food.js";
 
 import { ZodError, z } from "zod";
-import { AppError } from "./errors/app-error";
-import { auth } from "./routes/login";
+import { AppError } from "./errors/app-error.js";
+import { auth } from "./routes/login.js";
 
 import fastifyJwt from "@fastify/jwt";
-import { env } from "./env";
+import { env } from "./env/index.js";
 
 export const app = fastify();
 

@@ -7,12 +7,12 @@ Aqui devemos ter rotas para as seguintes funcionalidades:
 - Recuperar metricas - lógica de soma por função (get) 
 */
 
-import { FastifyInstance } from "fastify";
+import type { FastifyInstance } from "fastify";
 import z from "zod";
 import { randomUUID } from "node:crypto";
-import { knexDb } from "../database";
-import { AppError } from "../errors/app-error";
-import { checkAuth } from "../middlewares/check_auth";
+import { knexDb } from "../database.js";
+import { AppError } from "../errors/app-error.js";
+import { checkAuth } from "../middlewares/check_auth.js";
 
 export async function foodRoutes(app: FastifyInstance) {
   //GET
